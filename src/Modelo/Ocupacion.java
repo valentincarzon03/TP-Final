@@ -20,6 +20,10 @@ public class Ocupacion {
         this.estadoOcupacion = estadoOcupacion;
     }
 
+    public Ocupacion() {
+
+    }
+
     public Habitacion getHabitacion() {
         return habitacion;
     }
