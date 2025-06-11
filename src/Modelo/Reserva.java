@@ -2,35 +2,40 @@ package Modelo;
 import Enum.*;
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.Random;
 
 public class Reserva {
-    private LocalDate fechaInicio;
-    private LocalDate fechaFin;
+    private String fechaInicio;
+    private String fechaFin;
     private Pasajero pasajero;
     private EstadoReserva estadoReserva;
     private Habitacion habitacion;
+    private int nroReserva;
+    private static int contadorReservas = 1;
 
-    public Reserva(LocalDate fechaInicio, LocalDate fechaFin, Pasajero pasajero,EstadoReserva estadoReserva , Habitacion habitacion) {
+    public Reserva(String fechaInicio, String fechaFin, Pasajero pasajero, EstadoReserva estadoReserva , Habitacion habitacion) {
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
         this.pasajero = pasajero;
         this.estadoReserva = estadoReserva;
         this.habitacion = habitacion;
+        this.nroReserva = contadorReservas;
+        contadorReservas++;
     }
 
-    public LocalDate getFechaInicio() {
+    public String getFechaInicio() {
         return fechaInicio;
     }
 
-    public void setFechaInicio(LocalDate fechaInicio) {
+    public void setFechaInicio(String fechaInicio) {
         this.fechaInicio = fechaInicio;
     }
 
-    public LocalDate getFechaFin() {
+    public String getFechaFin() {
         return fechaFin;
     }
 
-    public void setFechaFin(LocalDate fechaFin) {
+    public void setFechaFin(String fechaFin) {
         this.fechaFin = fechaFin;
     }
 
@@ -58,21 +63,26 @@ public class Reserva {
         this.habitacion = habitacion;
     }
 
+    public int getNroReserva() {
+        return nroReserva;
+    }
+
     @Override
     public boolean equals(Object o) {
         if(this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Reserva reserva = (Reserva) o;
-        return Objects.equals(fechaInicio, reserva.fechaInicio) && Objects.equals(fechaFin, reserva.fechaFin) && Objects.equals(pasajero, reserva.pasajero) && Objects.equals(habitacion, reserva.habitacion);
+        return nroReserva == reserva.nroReserva;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fechaInicio, fechaFin, pasajero, habitacion);
+        return Objects.hashCode(nroReserva);
     }
+
     @Override
     public String toString() {
-        return "Reserva{" +
+        return "Reserva{" + "nroReserva=" + nroReserva +
                 "fechaInicio=" + fechaInicio +
                 ", fechaFin=" + fechaFin +
                 ", pasajero=" + pasajero +

@@ -3,6 +3,7 @@ package Modelo;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Scanner;
 import java.util.Set;
 
 public class Pasajero {
@@ -19,6 +20,9 @@ public class Pasajero {
         this.domicilio = domicilio;
         this.historialOcupaciones = new HashSet<>();
     }
+
+    public Pasajero() {
+        }
 
     public String getNombre() {
         return nombre;
@@ -56,6 +60,11 @@ public class Pasajero {
         return historialOcupaciones;
     }
 
+    public void agregarOcupacion(Ocupacion ocupacion) {
+        historialOcupaciones.add(ocupacion);
+
+    }
+
    //AGREGAR Y ELIMINAR Ocupacion
 
 
@@ -81,5 +90,20 @@ public class Pasajero {
                 ", domicilio='" + domicilio + '\'' +
                 ", historialOcupaciones=" + historialOcupaciones +
                 '}';
+    }
+    public Pasajero registrarPasajero(){
+
+        Scanner sc = new Scanner(System.in);
+         System.out.println("Ingrese el nombre del pasajero");
+         this.nombre = sc.nextLine();
+         System.out.println("Ingrese el DNI del pasajero");
+         this.dni = sc.nextInt();
+         System.out.println("Ingrese el origen del pasajero");
+         this.origen = sc.nextLine();
+         System.out.println("Ingrese el domicilio del pasajero");
+         this.domicilio = sc.nextLine();
+         sc.close();
+
+         return this;
     }
 }

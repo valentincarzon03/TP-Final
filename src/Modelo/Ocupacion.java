@@ -1,6 +1,9 @@
 package Modelo;
 import Enum.*;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class Ocupacion {
@@ -64,6 +67,7 @@ public class Ocupacion {
         this.tarifaTotal = tarifaTotal;
     }
 
+
     public EstadoOcupacion getEstadoOcupacion() {
         return estadoOcupacion;
     }
@@ -95,5 +99,26 @@ public class Ocupacion {
                 ", tarifaTotal=" + tarifaTotal +
                 ", estadoOcupacion=" + estadoOcupacion +
                 '}';
+    }
+    public double calcularPrecioEstadia(LocalDate fechaInicio, LocalDate fechaFin, Habitacion habitacion) {
+        // Validaciones
+        if (fechaInicio == null || fechaFin == null || habitacion == null) {
+            throw new IllegalArgumentException("Los parámetros no pueden ser nulos");
+        }
+
+        if (fechaFin.isBefore(fechaInicio)) {
+            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio");
+        }
+
+        // Calcular cantidad de días
+        long cantidadDias = ChronoUnit.DAYS.between(fechaInicio, fechaFin);
+
+        // Si es el mismo día, se cuenta como 1 día
+        if (cantidadDias == 0) {
+            cantidadDias = 1;
+        }
+
+
+        return habitacion.getTarifaPorDia() * cantidadDias;
     }
 }

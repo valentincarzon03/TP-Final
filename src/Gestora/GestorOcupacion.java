@@ -1,5 +1,6 @@
 package Gestora;
 
+import Interfaces.IGestoras;
 import Modelo.Habitacion;
 import Modelo.Ocupacion;
 import Modelo.Reserva;
@@ -9,7 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class GestorOcupacion {
+public class GestorOcupacion implements IGestoras<Ocupacion> {
 
     private Set<Ocupacion> listaOcupaciones;
 
@@ -17,6 +18,26 @@ public class GestorOcupacion {
         this.listaOcupaciones = new HashSet<>();
 
     }
+
+    @Override
+    public String mostrarLista() {
+        StringBuilder sb = new StringBuilder();
+        for (Ocupacion ocupacion : listaOcupaciones) {
+            sb = sb.append(ocupacion).append("\n");
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public void agregar(Ocupacion elemento) {
+        listaOcupaciones.add(elemento);
+    }
+
+    @Override
+    public void eliminar(Ocupacion elemento) {
+        listaOcupaciones.remove(elemento);
+    }
+
     public void realizarCheckIn(Reserva reserva) {
         // Validaciones
         if (reserva == null) {
@@ -57,7 +78,7 @@ public class GestorOcupacion {
                   ocupacion.setEstadoOcupacion(EstadoOcupacion.ACTIVA);
                   //AGREGAR TARIFA
            // ocupacion.getPasajero().//AGREGAR OCUPACION AL HISTORIAL DEL PASAJERO
-                  listaOcupaciones.add(ocupacion);
+                  agregar(ocupacion);
 
 
         } catch (Exception e) {
@@ -70,7 +91,7 @@ public class GestorOcupacion {
     public void realizarCheckOut(Ocupacion ocupacion)
     {
         ocupacion.getHabitacion().setEstadoHabitacion(EstadoHabitacion.DISPONIBLE);
-        listaOcupaciones.remove(ocupacion);
+        eliminar(ocupacion);
     }
 
 
