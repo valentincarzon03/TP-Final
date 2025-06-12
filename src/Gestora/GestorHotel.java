@@ -46,36 +46,49 @@ public class GestorHotel{
         if(!existe) {
             pasajeros.agregar(pasajero.getDni(), pasajero);
 
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
             // Solicitar fecha de la reserva
             System.out.print("\nIngrese la fecha de inicio de la reserva (dd-MM-yyyy): ");
             String fechaInicio = scanner.nextLine();
             System.out.print("Ingrese la fecha de fin de la reserva (dd-MM-yyyy): ");
             String fechaFin = scanner.nextLine();
 
+            LocalDate fechaInicioL = LocalDate.parse(fechaInicio, formatter);
+            LocalDate fechaFinL = LocalDate.parse(fechaFin, formatter);
+
             // Mostrar habitaciones disponibles
             System.out.println("\nHabitaciones disponibles:");
 
-            for (Habitacion hab : habitacionesDisponibles(LocalDate.parse(fechaInicio), LocalDate.parse(fechaFin))) {
-                System.out.println("Número: " + hab.getNumero() +
-                        " - Tipo: " + hab.getTipoHabitacion() +
-                        " - Precio: $" + hab.getTarifaPorDia());
+            List<Habitacion> habitacionesDisponibles = habitacionesDisponibles(fechaInicioL, fechaFinL);
+            if(!habitacionesDisponibles.isEmpty()) {
+                for (Habitacion hab : habitacionesDisponibles) {
+                    System.out.println("Número: " + hab.getNumero() +
+                            " - Tipo: " + hab.getTipoHabitacion() +
+                            " - Precio: $" + hab.getTarifaPorDia());
+                }
+
+                // Seleccionar habitación
+
+                System.out.print("\nIngrese el número de habitación deseada: ");
+                int numeroHabitacion = scanner.nextInt();
+                Habitacion habitacionSeleccionada = habitaciones.obtenerElemento(numeroHabitacion);
+                Reserva nuevaReserva = new Reserva(fechaInicio, fechaFin, pasajero, EstadoReserva.CONFIRMADA, habitacionSeleccionada);
+
+                reservas.agregar(nuevaReserva.getNroReserva(), nuevaReserva);
+
+                System.out.println("\n=== Reserva realizada exitosamente ===");
+                System.out.println("Número de reserva: " + nuevaReserva.getNroReserva());
+                System.out.println("Pasajero: " + pasajero.getNombre());
+                System.out.println("Habitación: " + habitacionSeleccionada.getNumero());
+                System.out.println("Fecha: " + fechaInicio + " - " + fechaFin);
             }
 
-            // Seleccionar habitación
-            System.out.print("\nIngrese el número de habitación deseada: ");
-            int numeroHabitacion = scanner.nextInt();
-            Habitacion habitacionSeleccionada = habitaciones.obtenerElemento(numeroHabitacion);
+            else{
+                System.out.println("No hay habitaciones disponibles");
 
-            // Crear la reserva
-            Reserva nuevaReserva = new Reserva(fechaInicio, fechaFin, pasajero, EstadoReserva.CONFIRMADA, habitacionSeleccionada);
+            }
 
-            reservas.agregar(nuevaReserva.getNroReserva(), nuevaReserva);
-
-            System.out.println("\n=== Reserva realizada exitosamente ===");
-            System.out.println("Número de reserva: " + nuevaReserva.getNroReserva());
-            System.out.println("Pasajero: " + pasajero.getNombre());
-            System.out.println("Habitación: " + habitacionSeleccionada.getNumero());
-            System.out.println("Fecha: " + fechaInicio + " - " + fechaFin);
         }
     }
 
@@ -173,14 +186,16 @@ public class GestorHotel{
         }
 
         List<Habitacion> disponibles = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
 
         for (Habitacion habitacion : habitaciones.obtenerLista().values()) {
             boolean estaDisponible = true;
 
             // Verificar si la habitación tiene reservas que se superpongan con las fechas
             for (Reserva reserva : reservas.obtenerLista().values()) {
-                LocalDate reservaInicio = LocalDate.parse(reserva.getFechaInicio());
-                LocalDate reservaFin = LocalDate.parse(reserva.getFechaFin());
+                LocalDate reservaInicio = LocalDate.parse(reserva.getFechaInicio(), formatter);
+                LocalDate reservaFin = LocalDate.parse(reserva.getFechaFin(),formatter);
 
                 // Una habitación no está disponible si:
                 // - La fecha inicio está entre el inicio y fin de una reserva existente
