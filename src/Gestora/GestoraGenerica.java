@@ -36,8 +36,6 @@ public class GestoraGenerica <K,V> {
         return lista.size();
     }
 
-
-
     public boolean contiene(K elemento) {
         return lista.containsKey(elemento);
     }

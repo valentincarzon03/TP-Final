@@ -13,14 +13,16 @@ public class Ocupacion {
     private LocalDateTime fechaCheckOut;
     private double tarifaTotal;
     private EstadoOcupacion estadoOcupacion;
+    private int nroOcupacion;
 
-    public Ocupacion(Habitacion habitacion, Pasajero pasajero, LocalDateTime fechaCheckIn, LocalDateTime fechaCheckOut, double tarifaTotal, EstadoOcupacion estadoOcupacion) {
+    public Ocupacion(Habitacion habitacion, Pasajero pasajero, LocalDateTime fechaCheckIn, LocalDateTime fechaCheckOut, double tarifaTotal, EstadoOcupacion estadoOcupacion, int nroOcupacion) {
         this.habitacion = habitacion;
         this.pasajero = pasajero;
         this.fechaCheckIn = fechaCheckIn;
         this.fechaCheckOut = fechaCheckOut;
         this.tarifaTotal = tarifaTotal;
         this.estadoOcupacion = estadoOcupacion;
+        this.nroOcupacion = nroOcupacion;
     }
 
     public Ocupacion() {
@@ -67,7 +69,6 @@ public class Ocupacion {
         this.tarifaTotal = tarifaTotal;
     }
 
-
     public EstadoOcupacion getEstadoOcupacion() {
         return estadoOcupacion;
     }
@@ -76,17 +77,24 @@ public class Ocupacion {
         this.estadoOcupacion = estadoOcupacion;
     }
 
+    public int getNroOcupacion() {
+        return nroOcupacion;
+    }
+
+    public void setNroOcupacion(int nroOcupacion) {
+        this.nroOcupacion = nroOcupacion;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if(this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Ocupacion ocupacion = (Ocupacion) o;
-        return Objects.equals(habitacion, ocupacion.habitacion) && Objects.equals(pasajero, ocupacion.pasajero) && Objects.equals(fechaCheckIn, ocupacion.fechaCheckIn) && Objects.equals(fechaCheckOut, ocupacion.fechaCheckOut);
+        return nroOcupacion == ocupacion.nroOcupacion;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(habitacion, pasajero, fechaCheckIn, fechaCheckOut);
+        return Objects.hashCode(nroOcupacion);
     }
 
     @Override
@@ -98,8 +106,10 @@ public class Ocupacion {
                 ", fechaCheckOut=" + fechaCheckOut +
                 ", tarifaTotal=" + tarifaTotal +
                 ", estadoOcupacion=" + estadoOcupacion +
+                ", nroOcupacion=" + nroOcupacion +
                 '}';
     }
+
     public double calcularPrecioEstadia(LocalDate fechaInicio, LocalDate fechaFin, Habitacion habitacion) {
         // Validaciones
         if (fechaInicio == null || fechaFin == null || habitacion == null) {

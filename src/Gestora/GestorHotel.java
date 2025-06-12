@@ -1,5 +1,6 @@
 package Gestora;
 
+import Excepciones.ElementoNuloExcepcion;
 import Modelo.Habitacion;
 import Modelo.Ocupacion;
 import Modelo.Pasajero;
@@ -38,43 +39,44 @@ public class GestorHotel{
 
         // Registrar el pasajero
         Pasajero pasajero = new Pasajero();
-        pasajero.registrarPasajero();
-        pasajeros.agregar(pasajero.getDni(), pasajero);//Corroborar si existe ya el pasajero a la lista de pasajeros, para no generar duplicados.
+        pasajero.registrarPasajero(scanner);
 
+        boolean existe = pasajeros.obtenerLista().containsKey(pasajero.getDni());
 
-        // Solicitar fecha de la reserva
-        System.out.print("\nIngrese la fecha de inicio de la reserva (dd-MM-yyyy): ");
-        String fechaInicio = scanner.nextLine();
-        System.out.print("Ingrese la fecha de fin de la reserva (dd-MM-yyyy): ");
-        String fechaFin = scanner.nextLine();
+        if(!existe) {
+            pasajeros.agregar(pasajero.getDni(), pasajero);
 
-        // Mostrar habitaciones disponibles
-        System.out.println("\nHabitaciones disponibles:");
+            // Solicitar fecha de la reserva
+            System.out.print("\nIngrese la fecha de inicio de la reserva (dd-MM-yyyy): ");
+            String fechaInicio = scanner.nextLine();
+            System.out.print("Ingrese la fecha de fin de la reserva (dd-MM-yyyy): ");
+            String fechaFin = scanner.nextLine();
 
-        for (Habitacion hab : habitacionesDisponibles(LocalDate.parse(fechaInicio), LocalDate.parse(fechaFin))) {
-            System.out.println("Número: " + hab.getNumero() +
-                    " - Tipo: " + hab.getTipoHabitacion() +
-                    " - Precio: $" + hab.getTarifaPorDia());
+            // Mostrar habitaciones disponibles
+            System.out.println("\nHabitaciones disponibles:");
+
+            for (Habitacion hab : habitacionesDisponibles(LocalDate.parse(fechaInicio), LocalDate.parse(fechaFin))) {
+                System.out.println("Número: " + hab.getNumero() +
+                        " - Tipo: " + hab.getTipoHabitacion() +
+                        " - Precio: $" + hab.getTarifaPorDia());
+            }
+
+            // Seleccionar habitación
+            System.out.print("\nIngrese el número de habitación deseada: ");
+            int numeroHabitacion = scanner.nextInt();
+            Habitacion habitacionSeleccionada = habitaciones.obtenerElemento(numeroHabitacion);
+
+            // Crear la reserva
+            Reserva nuevaReserva = new Reserva(fechaInicio, fechaFin, pasajero, EstadoReserva.CONFIRMADA, habitacionSeleccionada);
+
+            reservas.agregar(nuevaReserva.getNroReserva(), nuevaReserva);
+
+            System.out.println("\n=== Reserva realizada exitosamente ===");
+            System.out.println("Número de reserva: " + nuevaReserva.getNroReserva());
+            System.out.println("Pasajero: " + pasajero.getNombre());
+            System.out.println("Habitación: " + habitacionSeleccionada.getNumero());
+            System.out.println("Fecha: " + fechaInicio + " - " + fechaFin);
         }
-
-        // Seleccionar habitación
-        System.out.print("\nIngrese el número de habitación deseada: ");
-        int numeroHabitacion = scanner.nextInt();
-        Habitacion habitacionSeleccionada = habitaciones.obtenerElemento(numeroHabitacion);
-
-
-
-        // Crear la reserva
-        Reserva nuevaReserva = new Reserva(fechaInicio,fechaFin,pasajero,EstadoReserva.CONFIRMADA,habitacionSeleccionada);
-
-
-        reservas.agregar(nuevaReserva.getNroReserva(), nuevaReserva);
-
-        System.out.println("\n=== Reserva realizada exitosamente ===");
-        System.out.println("Número de reserva: " + nuevaReserva.getNroReserva());
-        System.out.println("Pasajero: " + pasajero.getNombre());
-        System.out.println("Habitación: " + habitacionSeleccionada.getNumero());
-        System.out.println("Fecha: " + fechaInicio + " - " + fechaFin);
     }
 
 
@@ -98,10 +100,13 @@ public class GestorHotel{
 
         System.out.println("¡Habitación agregada exitosamente!");
     }
+
     public void realizarCheckIn() {
         // Validaciones
         Scanner scanner = new Scanner(System.in);
         System.out.println("=== Realizar Check-In ===");
+
+        System.out.println("Ingrese numero de reserva");
         int numeroReserva = scanner.nextInt();
         Reserva reserva = reservas.obtenerElemento(numeroReserva);
 
@@ -145,19 +150,18 @@ public class GestorHotel{
             ocupacion.setFechaCheckIn(fechaInicio.atStartOfDay());
             ocupacion.setFechaCheckOut(fechafin.atStartOfDay());
             ocupacion.setEstadoOcupacion(EstadoOcupacion.ACTIVA);
-
+            ocupacion.setNroOcupacion(reserva.getNroReserva());
             double tarifatotal = ocupacion.calcularPrecioEstadia(fechaInicio,fechafin,habitacion);
             ocupacion.setTarifaTotal(tarifatotal);
-             ocupacion.getPasajero().agregarOcupacion(ocupacion);
-            ocupaciones.agregar(ocupacion);
+            ocupacion.getPasajero().agregarOcupacion(ocupacion);
+            ocupaciones.agregar(ocupacion.getNroOcupacion(), ocupacion);
             habitacion.setEstadoHabitacion(EstadoHabitacion.OCUPADA);
             reserva.setEstadoReserva(EstadoReserva.TERMINADA);
-
-
         } catch (Exception e) {
             throw new RuntimeException("Error al realizar el check-in: " + e.getMessage(), e);// HACER EXCEPCION PERSONALIZADA
         }
     }
+
     public List<Habitacion> habitacionesDisponibles(LocalDate fechaInicio, LocalDate fechaFin) {
         // Validar fechas
         if (fechaInicio == null || fechaFin == null) {
@@ -170,11 +174,11 @@ public class GestorHotel{
 
         List<Habitacion> disponibles = new ArrayList<>();
 
-        for (Habitacion habitacion : habitaciones.obtenerLista()) {
+        for (Habitacion habitacion : habitaciones.obtenerLista().values()) {
             boolean estaDisponible = true;
 
             // Verificar si la habitación tiene reservas que se superpongan con las fechas
-            for (Reserva reserva : reservas.obtenerLista()) {
+            for (Reserva reserva : reservas.obtenerLista().values()) {
                 LocalDate reservaInicio = LocalDate.parse(reserva.getFechaInicio());
                 LocalDate reservaFin = LocalDate.parse(reserva.getFechaFin());
 
@@ -203,13 +207,18 @@ public class GestorHotel{
         System.out.println("=== Realizar Check-Out ===");
         System.out.println("Ingrese numero de habitacion: ");
         int numeroHabitacion = scanner.nextInt();
+
         Habitacion habitacion = habitaciones.obtenerElemento(numeroHabitacion);
-        for(Ocupacion ocupacion : ocupaciones.obtenerLista()){
+        if(habitacion==null){
+            throw new ElementoNuloExcepcion();
+        }
+
+        for(Ocupacion ocupacion : ocupaciones.obtenerLista().values()){
             if(ocupacion.getHabitacion()==habitacion)
             {
                 ocupacion.setEstadoOcupacion(EstadoOcupacion.FINALIZADA);
                 habitacion.setEstadoHabitacion(EstadoHabitacion.DISPONIBLE);
-                ocupaciones.eliminar(ocupacion);
+                ocupaciones.eliminar(ocupacion.getNroOcupacion());
                 System.out.println("Check-out realizado exitosamente");
                 return;
             }
@@ -220,21 +229,26 @@ public class GestorHotel{
         }
 
     }
-    public void cancelarReserva(){
 
+    public void cancelarReserva(){
         Scanner scanner = new Scanner(System.in);
         System.out.println("=== Cancelar Reserva ===");
         System.out.println("Ingrese numero de reserva: ");
         int numeroReserva = scanner.nextInt();
-        Reserva reserva = reservas.obtenerElemento(numeroReserva);//FIJARSE QUE ESTO DEVUELVA LA RESERVA CORRECTA.
+        Reserva reserva = reservas.obtenerElemento(numeroReserva);
+        if(reserva==null){
+            throw new ElementoNuloExcepcion();
+        }
+
         reserva.setEstadoReserva(EstadoReserva.CANCELADA);
         System.out.println("Reserva cancelada exitosamente");
         System.out.println("Pasajero: " + reserva.getPasajero().getNombre());
 
     }
+
     public String habitacionesOcupadas() {
         StringBuilder sb = new StringBuilder();
-        for (Habitacion ocupacion : habitaciones.obtenerLista()) {
+        for (Habitacion ocupacion : habitaciones.obtenerLista().values()) {
             if (ocupacion.getEstadoHabitacion() == EstadoHabitacion.OCUPADA) {
                 sb.append(ocupacion.getNumero()).append("\n");
             }
@@ -243,7 +257,25 @@ public class GestorHotel{
         return sb.toString();
     }
 
+    public String datosOcupantes(){
+        StringBuilder sb = new StringBuilder();
 
+        for(Ocupacion ocupacion : ocupaciones.obtenerLista().values()){
+            sb.append(ocupacion.getPasajero()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    public String habitacionesNoDisponibles(){
+        StringBuilder sb = new StringBuilder();
+
+        for(Habitacion habitacion : habitaciones.obtenerLista().values()){
+            if(habitacion.getEstadoHabitacion() == EstadoHabitacion.EN_MANTENIMIENTO || habitacion.getEstadoHabitacion() == EstadoHabitacion.EN_DESINFECCION){
+                sb.append(habitacion.getNumero()).append(habitacion.getEstadoHabitacion());
+            }
+        }
+        return sb.toString();
+    }
 
 
 

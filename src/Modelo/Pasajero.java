@@ -62,10 +62,7 @@ public class Pasajero {
 
     public void agregarOcupacion(Ocupacion ocupacion) {
         historialOcupaciones.add(ocupacion);
-
     }
-
-   //AGREGAR Y ELIMINAR Ocupacion
 
 
     @Override
@@ -91,18 +88,17 @@ public class Pasajero {
                 ", historialOcupaciones=" + historialOcupaciones +
                 '}';
     }
-    public Pasajero registrarPasajero(){
 
-        Scanner sc = new Scanner(System.in);
+    public Pasajero registrarPasajero(Scanner sc){
          System.out.println("Ingrese el nombre del pasajero");
          this.nombre = sc.nextLine();
          System.out.println("Ingrese el DNI del pasajero");
          this.dni = sc.nextInt();
+         sc.nextLine();
          System.out.println("Ingrese el origen del pasajero");
          this.origen = sc.nextLine();
          System.out.println("Ingrese el domicilio del pasajero");
          this.domicilio = sc.nextLine();
-         sc.close();
 
          return this;
     }
