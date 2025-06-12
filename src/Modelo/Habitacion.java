@@ -16,6 +16,7 @@ public class Habitacion {
         this.tarifaPorDia = tarifaPorDia;
         this.estadoHabitacion = estadoHabitacion;
     }
+    public Habitacion() {}
 
     public int getNumero() {
         return numero;

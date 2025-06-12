@@ -11,17 +11,18 @@ public class Reserva {
     private EstadoReserva estadoReserva;
     private Habitacion habitacion;
     private int nroReserva;
-    private static int contadorReservas = 1;
 
-    public Reserva(String fechaInicio, String fechaFin, Pasajero pasajero, EstadoReserva estadoReserva , Habitacion habitacion) {
+
+    public Reserva(String fechaInicio, String fechaFin, Pasajero pasajero, EstadoReserva estadoReserva , Habitacion habitacion, int nroReserva) {
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
         this.pasajero = pasajero;
         this.estadoReserva = estadoReserva;
         this.habitacion = habitacion;
-        this.nroReserva = contadorReservas;
-        contadorReservas++;
+        this.nroReserva = nroReserva;
+
     }
+    public Reserva() {}
 
     public String getFechaInicio() {
         return fechaInicio;
@@ -65,6 +66,9 @@ public class Reserva {
 
     public int getNroReserva() {
         return nroReserva;
+    }
+    public void setNroReserva(int nroReserva) {
+        this.nroReserva = nroReserva;
     }
 
     @Override

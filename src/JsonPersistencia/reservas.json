@@ -1,0 +1,26 @@
+[
+  {
+    "pasajero": "Pasajero{nombre='valen', dni=45854223, origen='arg', domicilio='mdq', historialOcupaciones=0}",
+    "fechaInicio": "13-06-2025",
+    "numeroHabitacion": 205,
+    "nroReserva": 2,
+    "estadoReserva": "CANCELADA",
+    "fechaFin": "15-06-2025"
+  },
+  {
+    "pasajero": "Pasajero{nombre='agus', dni=38666, origen='arg', domicilio='mdq', historialOcupaciones=1}",
+    "fechaInicio": "12-06-2025",
+    "numeroHabitacion": 202,
+    "nroReserva": 3,
+    "estadoReserva": "TERMINADA",
+    "fechaFin": "12-06-2025"
+  },
+  {
+    "pasajero": "Pasajero{nombre='pepe', dni=456456, origen='aa', domicilio='a', historialOcupaciones=1}",
+    "fechaInicio": "12-06-2025",
+    "numeroHabitacion": 202,
+    "nroReserva": 4,
+    "estadoReserva": "TERMINADA",
+    "fechaFin": "16-06-2025"
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "tipo": "TRIPLE",
+    "estado": "DISPONIBLE",
+    "numero": 201,
+    "tarifaPorDia": 2000
+  },
+  {
+    "tipo": "DOBLE",
+    "estado": "OCUPADA",
+    "numero": 202,
+    "tarifaPorDia": 1500
+  },
+  {
+    "tipo": "SIMPLE",
+    "estado": "DISPONIBLE",
+    "numero": 205,
+    "tarifaPorDia": 1000
+  }
+]

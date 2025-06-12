@@ -1,6 +1,8 @@
 package Modelo;
 
 
+import Excepciones.ElementoRepetido;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Scanner;
@@ -22,6 +24,7 @@ public class Pasajero {
     }
 
     public Pasajero() {
+        this.historialOcupaciones = new HashSet<>();
         }
 
     public String getNombre() {
@@ -85,14 +88,15 @@ public class Pasajero {
                 ", dni=" + dni +
                 ", origen='" + origen + '\'' +
                 ", domicilio='" + domicilio + '\'' +
-                ", historialOcupaciones=" + historialOcupaciones +
+                ", historialOcupaciones=" + historialOcupaciones.size() +
                 '}';
     }
 
-    public Pasajero registrarPasajero(Scanner sc){
+    public Pasajero registrarPasajero(Scanner sc) throws ElementoRepetido{
          System.out.println("Ingrese el nombre del pasajero");
          this.nombre = sc.nextLine();
          System.out.println("Ingrese el DNI del pasajero");
+
          this.dni = sc.nextInt();
          sc.nextLine();
          System.out.println("Ingrese el origen del pasajero");

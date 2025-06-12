@@ -5,6 +5,8 @@ import Modelo.Administrador;
 import Modelo.Conserje;
 import Modelo.Usuario;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -26,6 +28,13 @@ public class Menu {
 
 
     public void iniciarSistema() {
+        try {
+            gestorHotel.cargarDatos();
+            System.out.println("Datos cargados exitosamente.");
+        } catch (Exception e) {
+            System.out.println("Error al cargar datos: " + e.getMessage());
+        }
+
         int opcion;
         do {
             System.out.println("╔═══════════════════════════════╗");
@@ -50,6 +59,13 @@ public class Menu {
                     System.out.println("Opción inválida. Intente nuevamente.");
             }
         } while (opcion != 2);
+        try {
+            gestorHotel.guardarDatos();
+            System.out.println("Datos guardados exitosamente.");
+        } catch (Exception e) {
+            System.out.println("Error al guardar datos: " + e.getMessage());
+        }
+
     }
     private boolean login(String tipoUsuario) {
         System.out.println("╔═══════════════════════════════╗");
@@ -135,9 +151,10 @@ public class Menu {
             System.out.println("╔═══════════════════════════════╗");
             System.out.println("║    MENÚ ADMINISTRADOR         ║");
             System.out.println("╠═══════════════════════════════╣");
-            System.out.println("║ 1. Crear Conserje            ║");
-            System.out.println("║ 2. Crear Habitación          ║");
-            System.out.println("║ 3. Cerrar Sesión             ║");
+            System.out.println("║ 1. Crear Conserje             ║");
+            System.out.println("║ 2. Mostrar Conserjes          ║");
+            System.out.println("║ 3. Crear Habitación           ║");
+            System.out.println("║ 4. Cerrar Sesión              ║");
             System.out.println("╚═══════════════════════════════╝");
 
             opcion = scanner.nextInt();
@@ -148,15 +165,18 @@ public class Menu {
                     crearNuevoConserje();
                     break;
                 case 2:
-                    gestorHotel.nuevaHabitacion();
+                    //mostrar lista conserjes
                     break;
                 case 3:
+                    gestorHotel.nuevaHabitacion();
+                    break;
+                case 4:
                     System.out.println("Cerrando sesión...");
                     break;
                 default:
                     System.out.println("Opción inválida");
             }
-        } while (opcion != 3);
+        } while (opcion != 4);
     }
 
     private void mostrarMenuRecepcionista() {
@@ -169,9 +189,14 @@ public class Menu {
             System.out.println("║ 2. Hacer Check-in             ║");
             System.out.println("║ 3. Hacer Check-out            ║");
             System.out.println("║ 4. Consultar Disponibilidad   ║");
-            System.out.println("║ 5. Listar Habitaciones        ║");
-            System.out.println("║ 6. Consultar Historial        ║");
-            System.out.println("║ 7. Cerrar Sesión              ║");
+            System.out.println("║ 5. Todas Las Habitaciones     ║");
+            System.out.println("║ 6. Habitaciones Ocupadas      ║");
+            System.out.println("║ 7. Habitaciones No Disponibles║");
+            System.out.println("║ 8. Mostrar Historial Pasajeros║");
+            System.out.println("║ 9. Mostrar Pasajeros Actuales ║");
+            System.out.println("║ 10. Cancelar Reserva          ║");
+            System.out.println("║ 11. Mostrar Reservas Actuales ║");
+            System.out.println("║ 12. Cerrar Sesión              ║");
             System.out.println("╚═══════════════════════════════╝");
 
             opcion = scanner.nextInt();
@@ -188,21 +213,42 @@ public class Menu {
                     gestorHotel.realizarCheckOut();
                     break;
                 case 4:
-                    //gestorHotel.habitacionesDisponibles()
+
+                    System.out.println("Ingrese la fecha de inicio de la reserva (dd-MM-yyyy): ");
+                    String fechaInicio = scanner.nextLine();
+                    System.out.print("Ingrese la fecha de fin de la reserva (dd-MM-yyyy): ");
+                    String fechaFin = scanner.nextLine();
+                    LocalDate fechaInicioL = LocalDate.parse(fechaInicio, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                    LocalDate fechaFinL = LocalDate.parse(fechaFin, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+                    System.out.println(gestorHotel.habitacionesDisponibles(fechaInicioL, fechaFinL));
                     break;
                 case 5:
-                    // gestorHotel.
+                    System.out.println(gestorHotel.mostrarDatosHabitaciones());
                     break;
                 case 6:
-                    //consultarHistorialPasajero();
+                    System.out.println(gestorHotel.mostrarDatosOcupaciones());
                     break;
                 case 7:
+                    System.out.println(gestorHotel.habitacionesNoDisponibles());
+                    break;
+                case 8:
+                    System.out.println(gestorHotel.mostrarDatosPasajeros());
+                    break;
+                    case 9:
+                        System.out.println(gestorHotel.datosOcupantes());
+                        break;
+                case 10:
+                        gestorHotel.cancelarReserva();
+                        break;
+                case 11:
+                    System.out.println(gestorHotel.mostrarDatosReservas());
+                case 12:
                     System.out.println("Cerrando sesión...");
                     break;
                 default:
                     System.out.println("Opción inválida");
             }
-        } while (opcion != 7);
+        } while (opcion != 12);
     }
 
 

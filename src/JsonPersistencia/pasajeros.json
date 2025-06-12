@@ -1,0 +1,51 @@
+[
+  {
+    "domicilio": "mdq",
+    "ocupaciones": [{
+      "fechaCheckOut": "2025-06-12T19:50:05.515405600",
+      "numeroHabitacion": 202,
+      "nroOcupacion": 1,
+      "tarifaTotal": 6000,
+      "fechaCheckIn": "2025-06-12T00:00",
+      "estadoOcupacion": "FINALIZADA"
+    }],
+    "origen": "arg",
+    "nombre": "agus",
+    "dni": 38497759
+  },
+  {
+    "domicilio": "mdq",
+    "ocupaciones": [],
+    "origen": "arg",
+    "nombre": "valen",
+    "dni": 45854223
+  },
+  {
+    "domicilio": "mdq",
+    "ocupaciones": [{
+      "fechaCheckOut": "2025-06-15T00:00",
+      "numeroHabitacion": 202,
+      "nroOcupacion": 3,
+      "tarifaTotal": 4500,
+      "fechaCheckIn": "2025-06-12T00:00",
+      "estadoOcupacion": "ACTIVA"
+    }],
+    "origen": "arg",
+    "nombre": "agus",
+    "dni": 38666
+  },
+  {
+    "domicilio": "a",
+    "ocupaciones": [{
+      "fechaCheckOut": "2025-06-16T00:00",
+      "numeroHabitacion": 202,
+      "nroOcupacion": 4,
+      "tarifaTotal": 6000,
+      "fechaCheckIn": "2025-06-12T00:00",
+      "estadoOcupacion": "ACTIVA"
+    }],
+    "origen": "aa",
+    "nombre": "pepe",
+    "dni": 456456
+  }
+]

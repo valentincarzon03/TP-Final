@@ -1,19 +1,21 @@
 package Gestora;
 
 import Excepciones.ElementoNuloExcepcion;
+import JsonPersistencia.JsonPersistencia;
 import Modelo.Habitacion;
 import Modelo.Ocupacion;
 import Modelo.Pasajero;
 import Modelo.Reserva;
 import Enum.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 
 public class GestorHotel{
 
@@ -31,6 +33,16 @@ public class GestorHotel{
 
 
     }
+    public int obtenerUltimoNumeroReserva() {
+        if (reservas.obtenerLista().isEmpty()) {
+            return 0;
+        }
+        return reservas.obtenerLista().keySet().stream()
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(0);
+    }
+
 
     public void realizarReserva() {
         Scanner scanner = new Scanner(System.in);
@@ -73,7 +85,9 @@ public class GestorHotel{
                 System.out.print("\nIngrese el número de habitación deseada: ");
                 int numeroHabitacion = scanner.nextInt();
                 Habitacion habitacionSeleccionada = habitaciones.obtenerElemento(numeroHabitacion);
-                Reserva nuevaReserva = new Reserva(fechaInicio, fechaFin, pasajero, EstadoReserva.CONFIRMADA, habitacionSeleccionada);
+                int nuevoNumeroReserva = obtenerUltimoNumeroReserva() + 1;
+
+                Reserva nuevaReserva = new Reserva(fechaInicio, fechaFin, pasajero, EstadoReserva.CONFIRMADA, habitacionSeleccionada, nuevoNumeroReserva);
 
                 reservas.agregar(nuevaReserva.getNroReserva(), nuevaReserva);
 
@@ -156,20 +170,23 @@ public class GestorHotel{
         }
 
         try {
+            Pasajero pasajero = reserva.getPasajero();
             // Crear la ocupación
             Ocupacion ocupacion = new Ocupacion();
             ocupacion.setHabitacion(habitacion);
-            ocupacion.setPasajero(reserva.getPasajero());
+            ocupacion.setPasajero(pasajero);
             ocupacion.setFechaCheckIn(fechaInicio.atStartOfDay());
             ocupacion.setFechaCheckOut(fechafin.atStartOfDay());
             ocupacion.setEstadoOcupacion(EstadoOcupacion.ACTIVA);
             ocupacion.setNroOcupacion(reserva.getNroReserva());
             double tarifatotal = ocupacion.calcularPrecioEstadia(fechaInicio,fechafin,habitacion);
             ocupacion.setTarifaTotal(tarifatotal);
-            ocupacion.getPasajero().agregarOcupacion(ocupacion);
+
+            pasajero.agregarOcupacion(ocupacion);
             ocupaciones.agregar(ocupacion.getNroOcupacion(), ocupacion);
             habitacion.setEstadoHabitacion(EstadoHabitacion.OCUPADA);
             reserva.setEstadoReserva(EstadoReserva.TERMINADA);
+            System.out.println("Check-in realizado exitosamente");
         } catch (Exception e) {
             throw new RuntimeException("Error al realizar el check-in: " + e.getMessage(), e);// HACER EXCEPCION PERSONALIZADA
         }
@@ -231,6 +248,9 @@ public class GestorHotel{
         for(Ocupacion ocupacion : ocupaciones.obtenerLista().values()){
             if(ocupacion.getHabitacion()==habitacion)
             {
+                Reserva reserva = reservas.obtenerElemento(ocupacion.getNroOcupacion());
+                reserva.setFechaFin(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+                ocupacion.setFechaCheckOut(LocalDateTime.now());
                 ocupacion.setEstadoOcupacion(EstadoOcupacion.FINALIZADA);
                 habitacion.setEstadoHabitacion(EstadoHabitacion.DISPONIBLE);
                 ocupaciones.eliminar(ocupacion.getNroOcupacion());
@@ -276,6 +296,7 @@ public class GestorHotel{
         StringBuilder sb = new StringBuilder();
 
         for(Ocupacion ocupacion : ocupaciones.obtenerLista().values()){
+
             sb.append(ocupacion.getPasajero()).append("\n");
         }
         return sb.toString();
@@ -291,13 +312,313 @@ public class GestorHotel{
         }
         return sb.toString();
     }
+    public void cargarDatos() {
+        cargarHabitaciones();
+        cargarPasajeros();
+        cargarReservas();
+        cargarOcupaciones();
+    }
+
+    public void guardarDatos() {
+        guardarHabitaciones();
+        guardarPasajeros();
+        guardarReservas();
+        guardarOcupaciones();
+
+    }
+
+    private void cargarPasajeros() {
+        JSONArray jsonPasajeros = JsonPersistencia.cargarJson("pasajeros.json");
+        for (int i = 0; i < jsonPasajeros.length(); i++) {
+            JSONObject jsonPasajero = null;
+            try {
+                jsonPasajero = jsonPasajeros.getJSONObject(i);
+                Pasajero pasajero = new Pasajero();
+                pasajero.setDni(jsonPasajero.getInt("dni"));
+                pasajero.setNombre(jsonPasajero.getString("nombre"));
+                pasajero.setOrigen(jsonPasajero.getString("origen"));
+                pasajero.setDomicilio(jsonPasajero.getString("domicilio"));
+                // Procesar el Set de ocupaciones
+                Set<Ocupacion> ocupaciones = new HashSet<>();
+                if (jsonPasajero.has("ocupaciones")) {
+                    JSONArray jsonOcupaciones = jsonPasajero.getJSONArray("ocupaciones");
+                    for (int j = 0; j < jsonOcupaciones.length(); j++) {
+                        JSONObject jsonOcupacion = jsonOcupaciones.getJSONObject(j);
+
+                        Ocupacion ocupacion = new Ocupacion();
+                        ocupacion.setNroOcupacion(jsonOcupacion.getInt("nroOcupacion"));
+
+                        // Convertir fechas de String a LocalDateTime
+                        String checkIn = jsonOcupacion.getString("fechaCheckIn");
+                        String checkOut = jsonOcupacion.getString("fechaCheckOut");
+                        ocupacion.setFechaCheckIn(LocalDateTime.parse(checkIn));
+                        ocupacion.setFechaCheckOut(LocalDateTime.parse(checkOut));
+
+                        // Obtener la habitación referenciada
+                        int numeroHabitacion = jsonOcupacion.getInt("numeroHabitacion");
+                        Habitacion habitacion = habitaciones.obtenerElemento(numeroHabitacion);
+                        ocupacion.setHabitacion(habitacion);
+
+                        // Establecer el estado de la ocupación
+                        String estadoStr = jsonOcupacion.getString("estadoOcupacion");
+                        ocupacion.setEstadoOcupacion(EstadoOcupacion.valueOf(estadoStr));
+
+                        ocupacion.setTarifaTotal(jsonOcupacion.getDouble("tarifaTotal"));
+
+                        pasajero.agregarOcupacion(ocupacion);
+
+                    }
+                }
 
 
 
+                    pasajeros.agregar(pasajero.getDni(), pasajero);
+
+        } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+        }
+
+    private void guardarPasajeros() {
+        JSONArray jsonPasajeros = new JSONArray();
+        for (Pasajero pasajero : pasajeros.obtenerLista().values()) {
+            JSONObject jsonPasajero = new JSONObject();
+
+            // Datos básicos del pasajero
+            try {
+                jsonPasajero.put("dni", pasajero.getDni());
+                jsonPasajero.put("nombre", pasajero.getNombre());
+                jsonPasajero.put("origen", pasajero.getOrigen());
+                jsonPasajero.put("domicilio", pasajero.getDomicilio());
+
+                // Convertir Set de ocupaciones a JSONArray
+                JSONArray jsonOcupaciones = new JSONArray();
+                Set<Ocupacion> ocupaciones = pasajero.gethistorialOcupaciones();
+                if (ocupaciones != null) {
+                    for (Ocupacion ocupacion : ocupaciones) {
+                        JSONObject jsonOcupacion = new JSONObject();
+                        jsonOcupacion.put("nroOcupacion", ocupacion.getNroOcupacion());
+                        jsonOcupacion.put("fechaCheckIn", ocupacion.getFechaCheckIn().toString());
+                        jsonOcupacion.put("fechaCheckOut", ocupacion.getFechaCheckOut().toString());
+                        jsonOcupacion.put("numeroHabitacion", ocupacion.getHabitacion().getNumero());
+                        jsonOcupacion.put("estadoOcupacion", ocupacion.getEstadoOcupacion().toString());
+                        jsonOcupacion.put("tarifaTotal", ocupacion.getTarifaTotal());
+
+                        jsonOcupaciones.put(jsonOcupacion);
+                    }
+
+                    jsonPasajero.put("ocupaciones", jsonOcupaciones);
+
+
+                }
+                jsonPasajeros.put(jsonPasajero);
+                JsonPersistencia.guardarPasajeros(jsonPasajeros);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    public String mostrarDatosPasajeros(){
+        StringBuilder sb = new StringBuilder();
+        for(Pasajero pasajero : pasajeros.obtenerLista().values()){
+            sb.append(pasajero).append("\n");
+        }
+        return sb.toString();
+    }
+    private void cargarOcupaciones() {
+        JSONArray jsonOcupaciones = JsonPersistencia.cargarJson("ocupaciones.json");
+        for (int i = 0; i < jsonOcupaciones.length(); i++) {
+            try {
+                JSONObject jsonOcupacion = jsonOcupaciones.getJSONObject(i);
+                Ocupacion ocupacion = new Ocupacion();
+
+                ocupacion.setNroOcupacion(jsonOcupacion.getInt("nroOcupacion"));
+                ocupacion.setFechaCheckIn(LocalDateTime.parse(jsonOcupacion.getString("fechaCheckIn")));
+                ocupacion.setFechaCheckOut(LocalDateTime.parse(jsonOcupacion.getString("fechaCheckOut")));
+
+                int numeroHabitacion = jsonOcupacion.getInt("numeroHabitacion");
+                ocupacion.setHabitacion(habitaciones.obtenerElemento(numeroHabitacion));
+
+                String pasajeroStr = jsonOcupacion.getString("pasajero");
+                int dniPasajero = extraerDNI(pasajeroStr);
+                Pasajero pasajero = pasajeros.obtenerElemento(dniPasajero);
+                ocupacion.setPasajero(pasajero);
+
+
+                ocupacion.setEstadoOcupacion(EstadoOcupacion.valueOf(jsonOcupacion.getString("estadoOcupacion")));
+                ocupacion.setTarifaTotal(jsonOcupacion.getDouble("tarifaTotal"));
+
+                ocupaciones.agregar(ocupacion.getNroOcupacion(), ocupacion);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void guardarOcupaciones() {
+        JSONArray jsonOcupaciones = new JSONArray();
+        for (Ocupacion ocupacion : ocupaciones.obtenerLista().values()) {
+            try {
+                JSONObject jsonOcupacion = new JSONObject();
+
+                // Obtener y procesar la cadena del pasajero
+
+                Pasajero pasajero =ocupacion.getPasajero();
+
+                jsonOcupacion.put("pasajero", pasajero);
+
+                jsonOcupacion.put("nroOcupacion", ocupacion.getNroOcupacion());
+                jsonOcupacion.put("fechaCheckIn", ocupacion.getFechaCheckIn().toString());
+                jsonOcupacion.put("fechaCheckOut", ocupacion.getFechaCheckOut().toString());
+                jsonOcupacion.put("numeroHabitacion", ocupacion.getHabitacion().getNumero());
+                jsonOcupacion.put("estadoOcupacion", ocupacion.getEstadoOcupacion().toString());
+                jsonOcupacion.put("tarifaTotal", ocupacion.getTarifaTotal());
+
+                jsonOcupaciones.put(jsonOcupacion);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        JsonPersistencia.guardarOcupaciones(jsonOcupaciones);
+    }
+
+    // Para Reservas
+    private void cargarReservas() {
+        JSONArray jsonReservas = JsonPersistencia.cargarJson("reservas.json");
+        for (int i = 0; i < jsonReservas.length(); i++) {
+            try {
+                JSONObject jsonReserva = jsonReservas.getJSONObject(i);
+                Reserva reserva = new Reserva();
+
+                reserva.setNroReserva(jsonReserva.getInt("nroReserva"));
+                reserva.setFechaInicio(jsonReserva.getString("fechaInicio"));
+                reserva.setFechaFin(jsonReserva.getString("fechaFin"));
+
+                int numeroHabitacion = jsonReserva.getInt("numeroHabitacion");
+                reserva.setHabitacion(habitaciones.obtenerElemento(numeroHabitacion));
+
+                // Obtener y procesar la cadena del pasajero
+                String pasajeroStr = jsonReserva.getString("pasajero");
+                int dni = extraerDNI(pasajeroStr);
+                Pasajero pasajero = pasajeros.obtenerElemento(dni);
+                reserva.setPasajero(pasajero);
+
+                reserva.setEstadoReserva(EstadoReserva.valueOf(jsonReserva.getString("estadoReserva")));
+
+
+                reservas.agregar(reserva.getNroReserva(), reserva);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    private int extraerDNI(String pasajeroStr) {
+        int inicio = pasajeroStr.indexOf("dni=") + 4;
+        int fin = pasajeroStr.indexOf(",", inicio);
+        if (fin == -1) {
+            fin = pasajeroStr.indexOf("}", inicio);
+        }
+
+        if (inicio >= 4 && fin > inicio) {
+            String dniStr = pasajeroStr.substring(inicio, fin);
+            return Integer.parseInt(dniStr.trim());
+        }
+        throw new IllegalArgumentException("No se pudo extraer el DNI de la cadena del pasajero");
+    }
+
+
+    private void guardarReservas() {
+        JSONArray jsonReservas = new JSONArray();
+
+
+        for (Reserva reserva : reservas.obtenerLista().values()) {
+            try {
+
+                JSONObject jsonReserva = new JSONObject();
 
 
 
+                jsonReserva.put("nroReserva", reserva.getNroReserva());
+                jsonReserva.put("fechaInicio", reserva.getFechaInicio());
+                jsonReserva.put("fechaFin", reserva.getFechaFin());
+                jsonReserva.put("numeroHabitacion", reserva.getHabitacion().getNumero());
+                jsonReserva.put("estadoReserva", reserva.getEstadoReserva().toString());
+                jsonReserva.put("pasajero", reserva.getPasajero());
 
+                jsonReservas.put(jsonReserva);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        JsonPersistencia.guardarReservas(jsonReservas);
+    }
+
+    // Para Habitaciones
+    private void cargarHabitaciones() {
+        JSONArray jsonHabitaciones = JsonPersistencia.cargarJson("habitaciones.json");
+        for (int i = 0; i < jsonHabitaciones.length(); i++) {
+            try {
+                JSONObject jsonHabitacion = jsonHabitaciones.getJSONObject(i);
+                Habitacion habitacion = new Habitacion();
+
+                habitacion.setNumero(jsonHabitacion.getInt("numero"));
+                habitacion.setTipoHabitacion(TipoHabitacion.valueOf(jsonHabitacion.getString("tipo")));
+                habitacion.setTarifaPorDia(jsonHabitacion.getDouble("tarifaPorDia"));
+                habitacion.setEstadoHabitacion(EstadoHabitacion.valueOf(jsonHabitacion.getString("estado")));
+
+                habitaciones.agregar(habitacion.getNumero(), habitacion);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private void guardarHabitaciones() {
+        JSONArray jsonHabitaciones = new JSONArray();
+        for (Habitacion habitacion : habitaciones.obtenerLista().values()) {
+            try {
+                JSONObject jsonHabitacion = new JSONObject();
+                jsonHabitacion.put("numero", habitacion.getNumero());
+                jsonHabitacion.put("tipo", habitacion.getTipoHabitacion().toString());
+                jsonHabitacion.put("tarifaPorDia", habitacion.getTarifaPorDia());
+                jsonHabitacion.put("estado", habitacion.getEstadoHabitacion().toString());
+
+                jsonHabitaciones.put(jsonHabitacion);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        JsonPersistencia.guardarHabitaciones(jsonHabitaciones);
+    }
+
+    // Métodos para mostrar datos
+    public String mostrarDatosOcupaciones() {
+        StringBuilder sb = new StringBuilder();
+        for (Ocupacion ocupacion : ocupaciones.obtenerLista().values()) {
+            sb.append(ocupacion).append("\n");
+        }
+        return sb.toString();
+    }
+
+    public String mostrarDatosReservas() {
+        StringBuilder sb = new StringBuilder();
+        for (Reserva reserva : reservas.obtenerLista().values()) {
+            if (reserva.getEstadoReserva() == EstadoReserva.CONFIRMADA) {
+            sb.append(reserva).append("\n");
+        }
+        }
+        return sb.toString();
+    }
+
+    public String mostrarDatosHabitaciones() {
+        StringBuilder sb = new StringBuilder();
+        for (Habitacion habitacion : habitaciones.obtenerLista().values()) {
+            sb.append(habitacion).append("\n");
+        }
+        return sb.toString();
+    }
 
 
 

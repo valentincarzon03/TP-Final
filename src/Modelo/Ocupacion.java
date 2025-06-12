@@ -100,8 +100,8 @@ public class Ocupacion {
     @Override
     public String toString() {
         return "Ocupacion{" +
-                "habitacion=" + habitacion +
-                ", pasajero=" + pasajero +
+                "habitacion=" + habitacion.getNumero() +
+                ", pasajero=" + pasajero.getNombre() +
                 ", fechaCheckIn=" + fechaCheckIn +
                 ", fechaCheckOut=" + fechaCheckOut +
                 ", tarifaTotal=" + tarifaTotal +
