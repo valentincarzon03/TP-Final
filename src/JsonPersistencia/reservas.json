@@ -22,5 +22,13 @@
     "nroReserva": 4,
     "estadoReserva": "TERMINADA",
     "fechaFin": "16-06-2025"
+  },
+  {
+    "pasajero": "Pasajero{nombre='agus1', dni=1234567, origen='espa', domicilio='sww', historialOcupaciones=0}",
+    "fechaInicio": "13-06-2025",
+    "numeroHabitacion": 401,
+    "nroReserva": 5,
+    "estadoReserva": "CONFIRMADA",
+    "fechaFin": "15-06-2025"
   }
 ]

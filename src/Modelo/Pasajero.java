@@ -92,13 +92,26 @@ public class Pasajero {
                 '}';
     }
 
-    public Pasajero registrarPasajero(Scanner sc) throws ElementoRepetido{
-         System.out.println("Ingrese el nombre del pasajero");
-         this.nombre = sc.nextLine();
-         System.out.println("Ingrese el DNI del pasajero");
+    public Pasajero registrarPasajero(Scanner sc)  {
+        System.out.println("Ingrese el nombre del pasajero");
+        while (true) {
+            String input = sc.nextLine().trim();
 
-         this.dni = sc.nextInt();
-         sc.nextLine();
+            if (input.isEmpty()) {
+                System.out.println("Error: El nombre no puede estar vacío");
+                continue;
+            }
+
+            if (input.matches(".*\\d.*")) {
+                System.out.println("Error: El nombre solo debe contener letras");
+                continue;
+            }
+
+            this.nombre = input;
+            break;
+        }
+        this.dni = leerEnteroValidado("Ingrese el DNI del pasajero", 7, 8, sc);
+
          System.out.println("Ingrese el origen del pasajero");
          this.origen = sc.nextLine();
          System.out.println("Ingrese el domicilio del pasajero");
@@ -106,4 +119,33 @@ public class Pasajero {
 
          return this;
     }
+    private int leerEnteroValidado(String mensaje, int minDigitos, int maxDigitos, Scanner sc) {
+        while (true) {
+            System.out.println(mensaje);
+            try {
+                String input = sc.nextLine().trim();
+
+                if (input.isEmpty()) {
+                    System.out.println("Error: El valor no puede estar vacío");
+                    continue;
+                }
+
+                if (!input.matches("\\d+")) {
+                    System.out.println("Error: Debe ingresar solo números");
+                    continue;
+                }
+
+                if (input.length() < minDigitos || input.length() > maxDigitos) {
+                    System.out.println("Error: Debe tener entre " + minDigitos + " y " + maxDigitos + " dígitos");
+                    continue;
+                }
+
+                return Integer.parseInt(input);
+
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Ingrese un número válido");
+            }
+        }
+    }
+
 }

@@ -1,11 +1,9 @@
 package Gestora;
 
 import Excepciones.ElementoNuloExcepcion;
+import Excepciones.FechaInvalidaExcepcion;
 import JsonPersistencia.JsonPersistencia;
-import Modelo.Habitacion;
-import Modelo.Ocupacion;
-import Modelo.Pasajero;
-import Modelo.Reserva;
+import Modelo.*;
 import Enum.*;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,6 +12,7 @@ import org.json.JSONObject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -23,6 +22,7 @@ public class GestorHotel{
    private GestoraGenerica<Integer, Habitacion> habitaciones;
    private GestoraGenerica<Integer,Ocupacion> ocupaciones;
    private GestoraGenerica<Integer,Pasajero> pasajeros;
+   private GestoraGenerica<String, Conserje> conserje;
 
 
     public GestorHotel() {
@@ -30,7 +30,7 @@ public class GestorHotel{
         this.habitaciones = new GestoraGenerica<>();
         this.ocupaciones = new GestoraGenerica<>();
         this.pasajeros = new GestoraGenerica<>();
-
+        this.conserje = new GestoraGenerica<>();
 
     }
     public int obtenerUltimoNumeroReserva() {
@@ -44,7 +44,7 @@ public class GestorHotel{
     }
 
 
-    public void realizarReserva() {
+    public void realizarReserva()throws FechaInvalidaExcepcion {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("=== NUEVA RESERVA ===");
@@ -57,19 +57,46 @@ public class GestorHotel{
 
         if(!existe) {
             pasajeros.agregar(pasajero.getDni(), pasajero);
+        }
+
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            LocalDate fechaInicioL = null;
+            LocalDate fechaFinL = null;
+            String fechaInicio = "";
+            String fechaFin = "";
 
-            // Solicitar fecha de la reserva
-            System.out.print("\nIngrese la fecha de inicio de la reserva (dd-MM-yyyy): ");
-            String fechaInicio = scanner.nextLine();
+        // Solicitar fecha de la reserva
+        while (true) {
+            try {
+
+                System.out.print("\nIngrese la fecha de inicio de la reserva (dd-MM-yyyy): ");
+             fechaInicio = scanner.nextLine();
             System.out.print("Ingrese la fecha de fin de la reserva (dd-MM-yyyy): ");
-            String fechaFin = scanner.nextLine();
+             fechaFin = scanner.nextLine();
 
-            LocalDate fechaInicioL = LocalDate.parse(fechaInicio, formatter);
-            LocalDate fechaFinL = LocalDate.parse(fechaFin, formatter);
+             fechaInicioL = LocalDate.parse(fechaInicio, formatter);
+             fechaFinL = LocalDate.parse(fechaFin, formatter);
+            LocalDate hoy = LocalDate.now();
+                if (fechaInicioL.isBefore(hoy)) {
+                    System.out.println("Error: La fecha de inicio no puede ser en el pasado");
+                    continue;
+                }
 
-            // Mostrar habitaciones disponibles
+                if (fechaFinL.isBefore(fechaInicioL)) {
+                    System.out.println("Error: La fecha de fin no puede ser anterior a la fecha de inicio");
+                    continue;
+                }
+
+                break;
+
+            } catch (FechaInvalidaExcepcion e) {
+                System.out.println("Error: Formato de fecha inválido. Use dd-MM-yyyy");
+            }
+        }
+
+
+        // Mostrar habitaciones disponibles
             System.out.println("\nHabitaciones disponibles:");
 
             List<Habitacion> habitacionesDisponibles = habitacionesDisponibles(fechaInicioL, fechaFinL);
@@ -103,7 +130,7 @@ public class GestorHotel{
 
             }
 
-        }
+
     }
 
 
@@ -129,47 +156,51 @@ public class GestorHotel{
     }
 
     public void realizarCheckIn() {
-        // Validaciones
         Scanner scanner = new Scanner(System.in);
         System.out.println("=== Realizar Check-In ===");
 
-        System.out.println("Ingrese numero de reserva");
-        int numeroReserva = scanner.nextInt();
-        Reserva reserva = reservas.obtenerElemento(numeroReserva);
-
-        if (reserva == null) {
-            throw new IllegalArgumentException("La reserva no puede ser nula");
-        }
-
-        if (reserva.getEstadoReserva() != EstadoReserva.CONFIRMADA) {
-            throw new IllegalStateException("Solo se puede hacer check-in de reservas confirmadas. " +
-                    "Estado actual: " + reserva.getEstadoReserva());
-        }
-
-        LocalDate hoy = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        LocalDate fechaInicio = LocalDate.parse(reserva.getFechaInicio(), formatter);
-        LocalDate fechafin = LocalDate.parse(reserva.getFechaFin(), formatter);
-
-
-        // Verificar que el check-in se realiza en la fecha correcta
-        if (hoy.isBefore(fechaInicio)) {
-            throw new IllegalStateException("No se puede realizar check-in antes de la fecha de inicio. " +
-                    "Fecha de inicio: " + reserva.getFechaInicio());
-        }
-
-        if (hoy.isAfter(fechaInicio.plusDays(1))) {
-            throw new IllegalStateException("La reserva ha expirado. Fecha límite de check-in superada");
-        }
-
-        // Verificar que la habitación esté disponible
-        Habitacion habitacion = reserva.getHabitacion();
-        if (habitacion.getEstadoHabitacion() != EstadoHabitacion.DISPONIBLE) {
-            throw new IllegalStateException("La habitación no está disponible para check-in. " +
-                    "Estado actual: " + habitacion.getEstadoHabitacion());
-        }
-
         try {
+            System.out.println("Ingrese número de reserva:");
+            String input = scanner.nextLine();
+            int numeroReserva = Integer.parseInt(input);
+
+            Reserva reserva = reservas.obtenerElemento(numeroReserva);
+            if (reserva == null) {
+                System.out.println("Error: El número de reserva " + numeroReserva + " no existe");
+                return; // Vuelve al menú anterior
+            }
+
+            if (reserva.getEstadoReserva() != EstadoReserva.CONFIRMADA) {
+                System.out.println("Error: Solo se puede hacer check-in de reservas confirmadas. " +
+                        "Estado actual: " + reserva.getEstadoReserva());
+                return; // Vuelve al menú anterior
+            }
+
+            LocalDate hoy = LocalDate.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            LocalDate fechaInicio = LocalDate.parse(reserva.getFechaInicio(), formatter);
+            LocalDate fechafin = LocalDate.parse(reserva.getFechaFin(), formatter);
+
+            // Verificar que el check-in se realiza en la fecha correcta
+            if (hoy.isBefore(fechaInicio)) {
+                System.out.println("Error: No se puede realizar check-in antes de la fecha de inicio. " +
+                        "Fecha de inicio: " + reserva.getFechaInicio());
+                return; // Vuelve al menú anterior
+            }
+
+            if (hoy.isAfter(fechaInicio.plusDays(1))) {
+                System.out.println("Error: La reserva ha expirado. Fecha límite de check-in superada");
+                return; // Vuelve al menú anterior
+            }
+
+            // Verificar que la habitación esté disponible
+            Habitacion habitacion = reserva.getHabitacion();
+            if (habitacion.getEstadoHabitacion() != EstadoHabitacion.DISPONIBLE) {
+                System.out.println("Error: La habitación no está disponible para check-in. " +
+                        "Estado actual: " + habitacion.getEstadoHabitacion());
+                return; // Vuelve al menú anterior
+            }
+
             Pasajero pasajero = reserva.getPasajero();
             // Crear la ocupación
             Ocupacion ocupacion = new Ocupacion();
@@ -179,7 +210,7 @@ public class GestorHotel{
             ocupacion.setFechaCheckOut(fechafin.atStartOfDay());
             ocupacion.setEstadoOcupacion(EstadoOcupacion.ACTIVA);
             ocupacion.setNroOcupacion(reserva.getNroReserva());
-            double tarifatotal = ocupacion.calcularPrecioEstadia(fechaInicio,fechafin,habitacion);
+            double tarifatotal = ocupacion.calcularPrecioEstadia(fechaInicio, fechafin, habitacion);
             ocupacion.setTarifaTotal(tarifatotal);
 
             pasajero.agregarOcupacion(ocupacion);
@@ -187,19 +218,24 @@ public class GestorHotel{
             habitacion.setEstadoHabitacion(EstadoHabitacion.OCUPADA);
             reserva.setEstadoReserva(EstadoReserva.TERMINADA);
             System.out.println("Check-in realizado exitosamente");
+
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Debe ingresar un número válido");
         } catch (Exception e) {
-            throw new RuntimeException("Error al realizar el check-in: " + e.getMessage(), e);// HACER EXCEPCION PERSONALIZADA
+            System.out.println("Error al realizar el check-in: " + e.getMessage());
         }
+
     }
 
-    public List<Habitacion> habitacionesDisponibles(LocalDate fechaInicio, LocalDate fechaFin) {
+
+    public List<Habitacion> habitacionesDisponibles(LocalDate fechaInicio, LocalDate fechaFin) throws FechaInvalidaExcepcion {
         // Validar fechas
         if (fechaInicio == null || fechaFin == null) {
-            throw new IllegalArgumentException("Las fechas no pueden ser nulas");
+            throw new FechaInvalidaExcepcion("Las fechas no pueden ser nulas");
         }
 
         if (fechaFin.isBefore(fechaInicio)) {
-            throw new IllegalArgumentException("La fecha fin no puede ser anterior a la fecha inicio");
+            throw new FechaInvalidaExcepcion("La fecha fin no puede ser anterior a la fecha inicio");
         }
 
         List<Habitacion> disponibles = new ArrayList<>();
@@ -265,23 +301,34 @@ public class GestorHotel{
 
     }
 
-    public void cancelarReserva(){
+    public void cancelarReserva() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("=== Cancelar Reserva ===");
-        System.out.println("Ingrese numero de reserva: ");
-        int numeroReserva = scanner.nextInt();
-        Reserva reserva = reservas.obtenerElemento(numeroReserva);
-        if(reserva==null){
-            throw new ElementoNuloExcepcion();
+
+        try {
+            System.out.println("Ingrese numero de reserva: ");
+            String input = scanner.nextLine();
+            int numeroReserva = Integer.parseInt(input);
+
+            Reserva reserva = reservas.obtenerElemento(numeroReserva);
+            if (reserva == null) {
+                System.out.println("Error: La reserva no existe");
+                return; // Vuelve al menú anterior
+            }
+
+            reserva.setEstadoReserva(EstadoReserva.CANCELADA);
+            System.out.println("Reserva cancelada exitosamente");
+            System.out.println("Pasajero: " + reserva.getPasajero().getNombre());
+
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Debe ingresar un número válido");
+        } catch (ElementoNuloExcepcion e) {
+            System.out.println("Error: " + e.getMessage());
         }
-
-        reserva.setEstadoReserva(EstadoReserva.CANCELADA);
-        System.out.println("Reserva cancelada exitosamente");
-        System.out.println("Pasajero: " + reserva.getPasajero().getNombre());
-
     }
 
-    public String habitacionesOcupadas() {
+
+        public String habitacionesOcupadas() {
         StringBuilder sb = new StringBuilder();
         for (Habitacion ocupacion : habitaciones.obtenerLista().values()) {
             if (ocupacion.getEstadoHabitacion() == EstadoHabitacion.OCUPADA) {

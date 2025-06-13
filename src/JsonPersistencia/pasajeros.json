@@ -21,6 +21,13 @@
     "dni": 45854223
   },
   {
+    "domicilio": "sww",
+    "ocupaciones": [],
+    "origen": "espa",
+    "nombre": "agus1",
+    "dni": 1234567
+  },
+  {
     "domicilio": "mdq",
     "ocupaciones": [{
       "fechaCheckOut": "2025-06-15T00:00",

@@ -2,6 +2,18 @@
   {
     "tipo": "TRIPLE",
     "estado": "DISPONIBLE",
+    "numero": 401,
+    "tarifaPorDia": 2000
+  },
+  {
+    "tipo": "CUADRUPLE",
+    "estado": "DISPONIBLE",
+    "numero": 402,
+    "tarifaPorDia": 2500
+  },
+  {
+    "tipo": "TRIPLE",
+    "estado": "DISPONIBLE",
     "numero": 201,
     "tarifaPorDia": 2000
   },
@@ -16,5 +28,17 @@
     "estado": "DISPONIBLE",
     "numero": 205,
     "tarifaPorDia": 1000
+  },
+  {
+    "tipo": "SIMPLE",
+    "estado": "DISPONIBLE",
+    "numero": 301,
+    "tarifaPorDia": 1000
+  },
+  {
+    "tipo": "DOBLE",
+    "estado": "DISPONIBLE",
+    "numero": 302,
+    "tarifaPorDia": 1500
   }
 ]

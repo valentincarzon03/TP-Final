@@ -15,11 +15,12 @@ public class Menu {
     private Scanner scanner = new Scanner(System.in);
     private List<Usuario> usuarios = new ArrayList<>();
     private Usuario usuariologueado;
-    GestorHotel gestorHotel = new GestorHotel();
+    GestorHotel gestorHotel ;
 
 
 
     public Menu() {
+        gestorHotel = new GestorHotel();
         // Crear usuarios iniciales de prueba
         usuarios.add(new Administrador("admin", "admin123"));
         usuarios.add(new Conserje("recep", "recep123"));
@@ -45,8 +46,14 @@ public class Menu {
             System.out.println("╚═══════════════════════════════╝");
             System.out.print("Seleccione una opción: ");
 
-            opcion = scanner.nextInt();
-            scanner.nextLine(); // Limpiar buffer
+            try {
+                opcion = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Error: Debe ingresar un número.");
+                opcion = 0; // valor inválido para continuar el bucle
+                continue;
+            }
+
 
             switch (opcion) {
                 case 1:
@@ -123,9 +130,14 @@ public class Menu {
         System.out.println("║ 2. Recepcionista              ║");
         System.out.println("║ 3. Volver                     ║");
         System.out.println("╚═══════════════════════════════╝");
+        int opcion;
+        try {
+            opcion = Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Debe ingresar un número válido.");
+            opcion = 0; // valor inválido que será manejado en el switch
+        }
 
-        int opcion = scanner.nextInt();
-        scanner.nextLine();
 
         switch (opcion) {
             case 1:
@@ -154,7 +166,8 @@ public class Menu {
             System.out.println("║ 1. Crear Conserje             ║");
             System.out.println("║ 2. Mostrar Conserjes          ║");
             System.out.println("║ 3. Crear Habitación           ║");
-            System.out.println("║ 4. Cerrar Sesión              ║");
+            System.out.println("║ 4. Hacer Back Up              ║");
+            System.out.println("║ 5. Cerrar Sesión              ║");
             System.out.println("╚═══════════════════════════════╝");
 
             opcion = scanner.nextInt();
@@ -171,12 +184,14 @@ public class Menu {
                     gestorHotel.nuevaHabitacion();
                     break;
                 case 4:
+                    gestorHotel.guardarDatos();
+                case 5:
                     System.out.println("Cerrando sesión...");
                     break;
                 default:
                     System.out.println("Opción inválida");
             }
-        } while (opcion != 4);
+        } while (opcion != 5);
     }
 
     private void mostrarMenuRecepcionista() {
