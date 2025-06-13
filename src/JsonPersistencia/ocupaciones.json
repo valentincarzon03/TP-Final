@@ -1,9 +1,1 @@
-[{
-  "pasajero": "Pasajero{nombre='pepe', dni=456456, origen='aa', domicilio='a', historialOcupaciones=1}",
-  "fechaCheckOut": "2025-06-16T00:00",
-  "numeroHabitacion": 202,
-  "nroOcupacion": 4,
-  "tarifaTotal": 6000,
-  "fechaCheckIn": "2025-06-12T00:00",
-  "estadoOcupacion": "ACTIVA"
-}]
+[]

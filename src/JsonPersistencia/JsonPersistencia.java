@@ -25,8 +25,12 @@ public class JsonPersistencia {
     public static void guardarHabitaciones(JSONArray habitaciones) {
         guardarJson("habitaciones.json", habitaciones);
     }
+    public static void guardarConserjes(JSONArray conserjes) {
+        guardarJson("Conserjes.json", conserjes);
+    }
 
-    private static void guardarJson(String archivo, JSONArray datos) {
+
+    public static void guardarJson(String archivo, JSONArray datos) {
         try {
             Files.write(Paths.get(RUTA + archivo), datos.toString(2).getBytes());
         } catch (IOException e) {

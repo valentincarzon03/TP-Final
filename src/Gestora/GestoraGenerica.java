@@ -10,7 +10,7 @@ public class GestoraGenerica <K,V> {
     private Map<K,V> lista;
 
     public GestoraGenerica() {
-        this.lista = new HashMap();
+        this.lista = new HashMap<>();
     }
 
     public Map<K,V> obtenerLista() {

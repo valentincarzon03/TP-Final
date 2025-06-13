@@ -95,19 +95,19 @@ public class Pasajero {
     public Pasajero registrarPasajero(Scanner sc)  {
         System.out.println("Ingrese el nombre del pasajero");
         while (true) {
-            String input = sc.nextLine().trim();
+            String nombre = sc.nextLine().trim();
 
-            if (input.isEmpty()) {
+            if (nombre.isEmpty()) {
                 System.out.println("Error: El nombre no puede estar vacío");
                 continue;
             }
 
-            if (input.matches(".*\\d.*")) {
+            if (nombre.matches(".*\\d.*")) {
                 System.out.println("Error: El nombre solo debe contener letras");
                 continue;
             }
 
-            this.nombre = input;
+            this.nombre = nombre;
             break;
         }
         this.dni = leerEnteroValidado("Ingrese el DNI del pasajero", 7, 8, sc);

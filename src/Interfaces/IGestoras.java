@@ -1,9 +1,15 @@
 package Interfaces;
 
-public interface IGestoras<T>{
-    String mostrarLista();
-    void agregar(T elemento);
-    void eliminar(T elemento);
+import Gestora.GestoraGenerica;
+
+import java.util.Map;
+
+public interface IGestoras{
+    String mostrar();
+    void guardar();
+    void cargar();
+
+
 
 
 }

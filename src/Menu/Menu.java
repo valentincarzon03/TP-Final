@@ -1,29 +1,31 @@
 package Menu;
 
+import Gestora.GestorConserjes;
 import Gestora.GestorHotel;
 import Modelo.Administrador;
 import Modelo.Conserje;
+import Modelo.Habitacion;
 import Modelo.Usuario;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
 public class Menu {
     private Scanner scanner = new Scanner(System.in);
-    private List<Usuario> usuarios = new ArrayList<>();
-    private Usuario usuariologueado;
+
     GestorHotel gestorHotel ;
+    GestorConserjes listaConserjes = new GestorConserjes() ;
 
 
 
     public Menu() {
         gestorHotel = new GestorHotel();
-        // Crear usuarios iniciales de prueba
-        usuarios.add(new Administrador("admin", "admin123"));
-        usuarios.add(new Conserje("recep", "recep123"));
+        listaConserjes = new GestorConserjes();
+
     }
 
 
@@ -31,6 +33,7 @@ public class Menu {
     public void iniciarSistema() {
         try {
             gestorHotel.cargarDatos();
+            listaConserjes.cargar();
             System.out.println("Datos cargados exitosamente.");
         } catch (Exception e) {
             System.out.println("Error al cargar datos: " + e.getMessage());
@@ -68,59 +71,40 @@ public class Menu {
         } while (opcion != 2);
         try {
             gestorHotel.guardarDatos();
+            listaConserjes.guardar();
             System.out.println("Datos guardados exitosamente.");
         } catch (Exception e) {
             System.out.println("Error al guardar datos: " + e.getMessage());
         }
 
     }
-    private boolean login(String tipoUsuario) {
-        System.out.println("╔═══════════════════════════════╗");
-        System.out.println("║      SISTEMA DE LOGIN         ║");
-        System.out.println("╚═══════════════════════════════╝");
-        int intentos = 3;
 
-        while (intentos > 0) {
-            System.out.println("\nIntentos restantes: " + intentos);
-            System.out.print("Usuario: ");
-            String usuarioIngresado = scanner.nextLine().trim();
+private boolean login(String tipoUsuario) {
+    System.out.println("=== Login ===");
+    System.out.println("Usuario: ");
+    String username = scanner.nextLine();
+    System.out.println("Contraseña: ");
+    String password = scanner.nextLine();
 
-            System.out.print("Contraseña: ");
-            String contrasenaIngresada = scanner.nextLine().trim();
+    if (tipoUsuario.equals("ADMINISTRADOR")) {
 
-            // Verificar credenciales
-            for (Usuario usuario : usuarios) {
-                if (usuario.getUsername().equals(usuarioIngresado) &&
-                        usuario.getPassword().equals(contrasenaIngresada)) {
+        Administrador admin = Administrador.getAdministrador();
+        if (admin.validarCredenciales("admin","admin")) {
 
-                    // Verificar el tipo de usuario
-                    boolean esUsuarioCorrecto = (tipoUsuario.equals("ADMIN") && usuario instanceof Administrador) ||
-                            (tipoUsuario.equals("CONSERJE") && usuario instanceof Conserje);
-
-                    if (esUsuarioCorrecto) {
-                        usuariologueado = usuario;
-                        System.out.println("\n¡Bienvenido, " + usuariologueado.getUsername() + "!");
-                        return true;
-                    } else {
-                        System.out.println("Error: No tienes permisos para acceder como " + tipoUsuario);
-                        intentos--;
-                        break;
-                    }
-                }
-            }
-
-            if (usuariologueado == null) {
-                System.out.println("Usuario o contraseña incorrectos");
-                intentos--;
-            }
+            return true;
         }
-
-        if (intentos == 0) {
-            System.out.println("\nDemasiados intentos fallidos. Acceso bloqueado.");
+    } else if (tipoUsuario.equals("CONSERJE")) {
+        GestorConserjes gestorConserjes = new GestorConserjes();
+        if (gestorConserjes.validarCredenciales(username, password)) {
+            new Conserje(username, password);
+            return true;
         }
-
-        return false;
     }
+
+    System.out.println("Credenciales inválidas");
+    return false;
+}
+
 
     private void seleccionarRol() {
         System.out.println("╔═══════════════════════════════╗");
@@ -141,7 +125,7 @@ public class Menu {
 
         switch (opcion) {
             case 1:
-                if (login("ADMIN")) {
+                if (login("ADMINISTRADOR")) {
                     mostrarMenuAdministrador();
                 }
                 break;
@@ -158,7 +142,7 @@ public class Menu {
     }
 
     private void mostrarMenuAdministrador() {
-        int opcion;
+        int opcion = 0;
         do {
             System.out.println("╔═══════════════════════════════╗");
             System.out.println("║    MENÚ ADMINISTRADOR         ║");
@@ -170,15 +154,20 @@ public class Menu {
             System.out.println("║ 5. Cerrar Sesión              ║");
             System.out.println("╚═══════════════════════════════╝");
 
-            opcion = scanner.nextInt();
-            scanner.nextLine();
+            try {
+                opcion = scanner.nextInt();
+                scanner.nextLine();
+            } catch (InputMismatchException e) {
+                System.out.println("Error: No se pueden ingresar letras, intente nuevamente");
+                scanner.nextLine(); // limpiar el buffer
+            }
 
             switch (opcion) {
                 case 1:
-                    crearNuevoConserje();
+                    listaConserjes.crearNuevoConserje();
                     break;
                 case 2:
-                    //mostrar lista conserjes
+                    System.out.println(listaConserjes.mostrar());
                     break;
                 case 3:
                     gestorHotel.nuevaHabitacion();
@@ -195,7 +184,7 @@ public class Menu {
     }
 
     private void mostrarMenuRecepcionista() {
-        int opcion;
+        int opcion = 0;
         do {
             System.out.println("╔═══════════════════════════════╗");
             System.out.println("║    MENÚ RECEPCIONISTA         ║");
@@ -213,9 +202,15 @@ public class Menu {
             System.out.println("║ 11. Mostrar Reservas Actuales ║");
             System.out.println("║ 12. Cerrar Sesión              ║");
             System.out.println("╚═══════════════════════════════╝");
+            System.out.println("Ingrese una opcion: ");
 
-            opcion = scanner.nextInt();
-            scanner.nextLine();
+            try {
+                opcion = scanner.nextInt();
+                scanner.nextLine();
+            } catch (InputMismatchException e) {
+                System.out.println("Error: No se pueden ingresar letras, intente nuevamente");
+                scanner.nextLine(); // limpiar el buffer
+            }
 
             switch (opcion) {
                 case 1:
@@ -235,7 +230,12 @@ public class Menu {
                     String fechaFin = scanner.nextLine();
                     LocalDate fechaInicioL = LocalDate.parse(fechaInicio, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
                     LocalDate fechaFinL = LocalDate.parse(fechaFin, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-                    System.out.println(gestorHotel.habitacionesDisponibles(fechaInicioL, fechaFinL));
+                   List<Habitacion> listahab = gestorHotel.habitacionesDisponibles(fechaInicioL, fechaFinL);
+                    for (Habitacion hab : listahab) {
+                        System.out.println("Número: " + hab.getNumero() +
+                                " - Tipo: " + hab.getTipoHabitacion() +
+                                " - Precio: $" + hab.getTarifaPorDia());
+                    }
                     break;
                 case 5:
                     System.out.println(gestorHotel.mostrarDatosHabitaciones());
@@ -247,7 +247,7 @@ public class Menu {
                     System.out.println(gestorHotel.habitacionesNoDisponibles());
                     break;
                 case 8:
-                    System.out.println(gestorHotel.mostrarDatosPasajeros());
+                    System.out.println(gestorHotel.mostrar());
                     break;
                     case 9:
                         System.out.println(gestorHotel.datosOcupantes());
@@ -270,16 +270,7 @@ public class Menu {
 
 
 
-    private void crearNuevoConserje() {
-        System.out.print("Ingrese nombre de usuario: ");
-        String nuevoUsuario = scanner.nextLine();
 
-        System.out.print("Ingrese contraseña: ");
-        String nuevaContrasena = scanner.nextLine();
-
-        usuarios.add(new Conserje(nuevoUsuario, nuevaContrasena));
-        System.out.println("Conserje creado exitosamente.");
-    }
 }
 
 

@@ -2,6 +2,7 @@ package Gestora;
 
 import Excepciones.ElementoNuloExcepcion;
 import Excepciones.FechaInvalidaExcepcion;
+import Interfaces.IGestoras;
 import JsonPersistencia.JsonPersistencia;
 import Modelo.*;
 import Enum.*;
@@ -12,17 +13,15 @@ import org.json.JSONObject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-public class GestorHotel{
+public class GestorHotel implements IGestoras {
 
    private GestoraGenerica<Integer,Reserva> reservas;
    private GestoraGenerica<Integer, Habitacion> habitaciones;
    private GestoraGenerica<Integer,Ocupacion> ocupaciones;
    private GestoraGenerica<Integer,Pasajero> pasajeros;
-   private GestoraGenerica<String, Conserje> conserje;
+
 
 
     public GestorHotel() {
@@ -30,7 +29,7 @@ public class GestorHotel{
         this.habitaciones = new GestoraGenerica<>();
         this.ocupaciones = new GestoraGenerica<>();
         this.pasajeros = new GestoraGenerica<>();
-        this.conserje = new GestoraGenerica<>();
+
 
     }
     public int obtenerUltimoNumeroReserva() {
@@ -167,13 +166,13 @@ public class GestorHotel{
             Reserva reserva = reservas.obtenerElemento(numeroReserva);
             if (reserva == null) {
                 System.out.println("Error: El número de reserva " + numeroReserva + " no existe");
-                return; // Vuelve al menú anterior
+                return;
             }
 
             if (reserva.getEstadoReserva() != EstadoReserva.CONFIRMADA) {
                 System.out.println("Error: Solo se puede hacer check-in de reservas confirmadas. " +
                         "Estado actual: " + reserva.getEstadoReserva());
-                return; // Vuelve al menú anterior
+                return;
             }
 
             LocalDate hoy = LocalDate.now();
@@ -185,12 +184,12 @@ public class GestorHotel{
             if (hoy.isBefore(fechaInicio)) {
                 System.out.println("Error: No se puede realizar check-in antes de la fecha de inicio. " +
                         "Fecha de inicio: " + reserva.getFechaInicio());
-                return; // Vuelve al menú anterior
+                return;
             }
 
             if (hoy.isAfter(fechaInicio.plusDays(1))) {
                 System.out.println("Error: La reserva ha expirado. Fecha límite de check-in superada");
-                return; // Vuelve al menú anterior
+                return;
             }
 
             // Verificar que la habitación esté disponible
@@ -198,7 +197,7 @@ public class GestorHotel{
             if (habitacion.getEstadoHabitacion() != EstadoHabitacion.DISPONIBLE) {
                 System.out.println("Error: La habitación no está disponible para check-in. " +
                         "Estado actual: " + habitacion.getEstadoHabitacion());
-                return; // Vuelve al menú anterior
+                return;
             }
 
             Pasajero pasajero = reserva.getPasajero();
@@ -266,9 +265,12 @@ public class GestorHotel{
             if (estaDisponible && habitacion.getEstadoHabitacion() == EstadoHabitacion.DISPONIBLE) {
                 disponibles.add(habitacion);
             }
+
         }
 
         return disponibles;
+
+
     }
     public void realizarCheckOut(){
         Scanner scanner = new Scanner(System.in);
@@ -313,10 +315,15 @@ public class GestorHotel{
             Reserva reserva = reservas.obtenerElemento(numeroReserva);
             if (reserva == null) {
                 System.out.println("Error: La reserva no existe");
-                return; // Vuelve al menú anterior
+                return;
             }
 
             reserva.setEstadoReserva(EstadoReserva.CANCELADA);
+            // Actualizar la fecha de fin al día actual
+            String fechaActual = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+            reserva.setFechaFin(fechaActual);
+
+
             System.out.println("Reserva cancelada exitosamente");
             System.out.println("Pasajero: " + reserva.getPasajero().getNombre());
 
@@ -361,20 +368,21 @@ public class GestorHotel{
     }
     public void cargarDatos() {
         cargarHabitaciones();
-        cargarPasajeros();
+        cargar();
         cargarReservas();
         cargarOcupaciones();
     }
 
     public void guardarDatos() {
         guardarHabitaciones();
-        guardarPasajeros();
+        guardar();
         guardarReservas();
         guardarOcupaciones();
 
     }
 
-    private void cargarPasajeros() {
+    @Override
+    public void cargar() {
         JSONArray jsonPasajeros = JsonPersistencia.cargarJson("pasajeros.json");
         for (int i = 0; i < jsonPasajeros.length(); i++) {
             JSONObject jsonPasajero = null;
@@ -385,7 +393,7 @@ public class GestorHotel{
                 pasajero.setNombre(jsonPasajero.getString("nombre"));
                 pasajero.setOrigen(jsonPasajero.getString("origen"));
                 pasajero.setDomicilio(jsonPasajero.getString("domicilio"));
-                // Procesar el Set de ocupaciones
+
                 Set<Ocupacion> ocupaciones = new HashSet<>();
                 if (jsonPasajero.has("ocupaciones")) {
                     JSONArray jsonOcupaciones = jsonPasajero.getJSONArray("ocupaciones");
@@ -395,13 +403,13 @@ public class GestorHotel{
                         Ocupacion ocupacion = new Ocupacion();
                         ocupacion.setNroOcupacion(jsonOcupacion.getInt("nroOcupacion"));
 
-                        // Convertir fechas de String a LocalDateTime
+
                         String checkIn = jsonOcupacion.getString("fechaCheckIn");
                         String checkOut = jsonOcupacion.getString("fechaCheckOut");
                         ocupacion.setFechaCheckIn(LocalDateTime.parse(checkIn));
                         ocupacion.setFechaCheckOut(LocalDateTime.parse(checkOut));
 
-                        // Obtener la habitación referenciada
+
                         int numeroHabitacion = jsonOcupacion.getInt("numeroHabitacion");
                         Habitacion habitacion = habitaciones.obtenerElemento(numeroHabitacion);
                         ocupacion.setHabitacion(habitacion);
@@ -428,7 +436,8 @@ public class GestorHotel{
         }
         }
 
-    private void guardarPasajeros() {
+    @Override
+    public void guardar() {
         JSONArray jsonPasajeros = new JSONArray();
         for (Pasajero pasajero : pasajeros.obtenerLista().values()) {
             JSONObject jsonPasajero = new JSONObject();
@@ -467,9 +476,10 @@ public class GestorHotel{
             }
         }
     }
-    public String mostrarDatosPasajeros(){
+    @Override
+    public String mostrar() {
         StringBuilder sb = new StringBuilder();
-        for(Pasajero pasajero : pasajeros.obtenerLista().values()){
+        for(Object pasajero : pasajeros.obtenerLista().values()){
             sb.append(pasajero).append("\n");
         }
         return sb.toString();
@@ -510,7 +520,6 @@ public class GestorHotel{
             try {
                 JSONObject jsonOcupacion = new JSONObject();
 
-                // Obtener y procesar la cadena del pasajero
 
                 Pasajero pasajero =ocupacion.getPasajero();
 
